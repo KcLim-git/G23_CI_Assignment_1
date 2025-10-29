@@ -37,6 +37,26 @@ risk['moderate'] = mf.trimf(risk.universe, [25, 45, 65])
 risk['high']     = mf.trimf(risk.universe, [55, 75, 90])
 risk['severe']   = mf.trapmf(risk.universe, [80, 90, 100, 100])
 
+fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+
+rain.view()
+axs[0, 0].set_title("Rainfall Intensity (mm/hr)")
+
+drain.view()
+axs[0, 1].set_title("Drainage Capacity (%)")
+
+slope.view()
+axs[1, 0].set_title("Land Slope (°)")
+
+risk.view()
+axs[1, 1].set_title("Flood Risk Level (0–100)")
+
+plt.tight_layout()
+plt.show()
+
+
+
+
 # ------------------------------------------------------------
 # PART 3 — Rule Base (12 + fallback)
 # ------------------------------------------------------------
