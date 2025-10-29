@@ -1,6 +1,7 @@
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
+from skfuzzy import membership as mf
 import matplotlib.pyplot as plt
 
 # ------------------------------
