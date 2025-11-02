@@ -37,22 +37,23 @@ risk['moderate'] = mf.trimf(risk.universe, [25, 45, 65])
 risk['high']     = mf.trimf(risk.universe, [55, 75, 90])
 risk['severe']   = mf.trapmf(risk.universe, [80, 90, 100, 100])
 
-fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+# ------------------------------------------------------------
+# VISUALIZE MEMBERSHIP FUNCTIONS INDIVIDUALLY
+# ------------------------------------------------------------
+print("Displaying membership functions...")
+
+# ------------------------------------------------------------
+# VISUALIZE MEMBERSHIP FUNCTIONS (final working version)
+# ------------------------------------------------------------
+print("Displaying membership functions...")
 
 rain.view()
-axs[0, 0].set_title("Rainfall Intensity (mm/hr)")
-
 drain.view()
-axs[0, 1].set_title("Drainage Capacity (%)")
-
 slope.view()
-axs[1, 0].set_title("Land Slope (°)")
-
 risk.view()
-axs[1, 1].set_title("Flood Risk Level (0–100)")
 
-plt.tight_layout()
-plt.show()
+
+
 
 
 
@@ -157,3 +158,54 @@ for i in range(x2.shape[0]):
 
 plot3d(x2, y2, z_risk2, "Rainfall (mm/hr)", "Slope (°)",
        "Flood Risk Surface (Drainage = 40%)")
+
+
+
+# ------------------------------------------------------------
+# PART 7 — Third 3D Visualization (Drainage × Slope)
+# ------------------------------------------------------------
+drain_vals3 = np.linspace(0, 100, 40)
+slope_vals3 = np.linspace(0, 30, 40)
+x3, y3 = np.meshgrid(drain_vals3, slope_vals3)
+z_risk3 = np.zeros_like(x3)
+
+for i in range(x3.shape[0]):
+    for j in range(x3.shape[1]):
+        sim = ctrl.ControlSystemSimulation(flood_ctrl)
+        sim.input['rain'] = 80   # fixed rainfall (heavy rain)
+        sim.input['drain'] = x3[i, j]
+        sim.input['slope'] = y3[i, j]
+        try:
+            sim.compute()
+            z_risk3[i, j] = sim.output['risk']
+        except KeyError:
+            z_risk3[i, j] = np.nan
+
+plot3d(x3, y3, z_risk3, "Drainage Capacity (%)", "Slope (°)",
+       "Flood Risk Surface (Rainfall = 80 mm/hr)")
+
+
+# ------------------------------------------------------------
+# PART 8 — Optional: Rain × Drainage at multiple slope levels
+# ------------------------------------------------------------
+for slope_val in [2, 10, 20]:  # flat, gentle, steep examples
+    rain_vals4 = np.linspace(0, 100, 40)
+    drain_vals4 = np.linspace(0, 100, 40)
+    x4, y4 = np.meshgrid(rain_vals4, drain_vals4)
+    z_risk4 = np.zeros_like(x4)
+
+    for i in range(x4.shape[0]):
+        for j in range(x4.shape[1]):
+            sim = ctrl.ControlSystemSimulation(flood_ctrl)
+            sim.input['rain'] = x4[i, j]
+            sim.input['drain'] = y4[i, j]
+            sim.input['slope'] = slope_val
+            try:
+                sim.compute()
+                z_risk4[i, j] = sim.output['risk']
+            except KeyError:
+                z_risk4[i, j] = np.nan
+
+    plot3d(x4, y4, z_risk4,
+           "Rainfall (mm/hr)", "Drainage Capacity (%)",
+           f"Flood Risk Surface (Slope = {slope_val}°)")
