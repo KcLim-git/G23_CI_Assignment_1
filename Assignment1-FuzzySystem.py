@@ -4,7 +4,6 @@
 #  ------------------------------------------------------------
 #  Inputs : Rainfall Intensity (mm/hr), Drainage Capacity (%), Land Slope (°)
 #  Output : Flood Risk Level (0–100)
-#  Author : [Your Name]
 #  Purpose: Predict flood risk based on environmental parameters
 # ============================================================
 
