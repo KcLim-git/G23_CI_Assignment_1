@@ -6,7 +6,6 @@
 #  Output : Flood Risk Level (0–100)
 #  Purpose: Predict flood risk based on environmental parameters
 # ============================================================
-
 # ------------------------------------------------------------
 # Import Required Libraries
 # ------------------------------------------------------------
@@ -35,26 +34,32 @@ risk  = ctrl.Consequent(np.arange(0, 101, 1), 'risk')  # Output : Flood risk lev
 # Overlapping ranges ensure smooth transitions between categories.
 
 # --- Rainfall Intensity ---
-rain['low']      = mf.trapmf(rain.universe, [0, 0, 10, 35])       # Low rain
-rain['medium']   = mf.trimf(rain.universe, [25, 50, 75])          # Moderate rain
-rain['high']     = mf.trimf(rain.universe, [65, 80, 95])          # High rain
-rain['veryhigh'] = mf.trapmf(rain.universe, [85, 90, 100, 100])   # Very high rain
+rain.universe   = np.arange(0, 101, 1)    # mm/hr
+drain.universe  = np.arange(0, 101, 1)    # %
+slope.universe  = np.arange(0, 31, 1)     # degrees
+risk.universe   = np.arange(0, 101, 1)
 
-# --- Drainage Capacity ---
-drain['poor'] = mf.trapmf(drain.universe, [0, 0, 25, 45])         # Poor drainage (bad infrastructure)
-drain['fair'] = mf.trimf(drain.universe, [35, 55, 75])            # Moderate drainage
-drain['good'] = mf.trapmf(drain.universe, [65, 85, 100, 100])     # Good drainage system
+# Rainfall
+rain['low']      = mf.trapmf(rain.universe,  [0, 0, 20, 40])
+rain['medium']   = mf.trimf(rain.universe,   [30, 50, 70])
+rain['high']     = mf.trimf(rain.universe,   [60, 80, 90])
+rain['veryhigh'] = mf.trapmf(rain.universe,  [85, 90, 100, 100])
 
-# --- Land Slope ---
-slope['flat']   = mf.trapmf(slope.universe, [0, 0, 2, 6])         # Flat terrain
-slope['gentle'] = mf.trimf(slope.universe, [4, 9, 16])            # Gentle slope
-slope['steep']  = mf.trapmf(slope.universe, [13, 20, 30, 30])     # Steep terrain
+# Drainage
+drain['poor']   = mf.trapmf(drain.universe, [0, 0, 20, 40])
+drain['fair']   = mf.trimf(drain.universe,  [30, 50, 70])
+drain['good']   = mf.trapmf(drain.universe, [60, 80, 100, 100])
 
-# --- Flood Risk Output ---
-risk['low']      = mf.trapmf(risk.universe, [0, 0, 15, 35])       # Low risk
-risk['moderate'] = mf.trimf(risk.universe, [25, 45, 65])          # Moderate risk
-risk['high']     = mf.trimf(risk.universe, [55, 75, 90])          # High risk
-risk['severe']   = mf.trapmf(risk.universe, [80, 90, 100, 100])   # Severe flood risk
+# Slope
+slope['flat']   = mf.trapmf(slope.universe, [0, 0, 5, 10])
+slope['gentle'] = mf.trimf(slope.universe,  [5, 12, 20])
+slope['steep']  = mf.trapmf(slope.universe, [15, 25, 30, 30])
+
+# Risk
+risk['low']      = mf.trapmf(risk.universe,  [0, 0, 20, 40])      # low flood risk
+risk['moderate'] = mf.trimf(risk.universe,   [30, 50, 70])        # moderate
+risk['high']     = mf.trimf(risk.universe,   [60, 80, 90])        # high
+risk['severe']   = mf.trapmf(risk.universe,  [85, 90, 100, 100])  # includes 100
 
 # ------------------------------------------------------------
 # VISUALIZE MEMBERSHIP FUNCTIONS
@@ -84,13 +89,17 @@ rule9  = ctrl.Rule(rain['low'] & slope['steep'] & drain['fair'], risk['low'])
 rule10 = ctrl.Rule(rain['medium'] & slope['flat'] & drain['fair'], risk['high'])
 rule11 = ctrl.Rule(rain['high'] & slope['gentle'] & drain['fair'], risk['high'])
 rule12 = ctrl.Rule(rain['medium'] & slope['gentle'] & drain['fair'], risk['moderate'])
-rule13 = ctrl.Rule(rain['medium'] | drain['fair'] | slope['gentle'], risk['moderate'])
-rule14 = ctrl.Rule(rain['low'] | rain['medium'] | rain['high'] | rain['veryhigh'], risk['moderate'])
+rule13 = ctrl.Rule((rain['medium'] & drain['fair']) |(rain['medium'] & slope['gentle']) |(drain['fair'] & slope['gentle']),risk['moderate']
+)
 
+# --- Edge-cover rules for dry or low-rain conditions ---
+ruleA = ctrl.Rule(rain['low'] & (drain['good'] | slope['steep']), risk['low'])
+ruleB = ctrl.Rule(rain['low'] & drain['poor'] & slope['flat'],    risk['moderate'])
 # Combine all rules into a list
 rules = [
     rule1, rule2, rule3, rule4, rule5, rule6,
-    rule7, rule8, rule9, rule10, rule11, rule12,rule13,rule14
+    rule7, rule8, rule9, rule10, rule11, rule12,
+    rule13, ruleA, ruleB
 ]
 
 # ------------------------------------------------------------
@@ -116,6 +125,23 @@ print("Predicted Flood Risk (0–100):", round(flood_sim.output['risk'], 2))
 # Visualize the aggregated output fuzzy set and defuzzified centroid
 risk.view(sim=flood_sim)
 plt.show()
+
+
+for r in [0, 20, 40, 60, 80, 100]:
+    for d in [0, 20, 40, 60, 80, 100]:
+        for s in [0, 10, 20, 30]:
+            sim = ctrl.ControlSystemSimulation(flood_ctrl)
+            sim.input['rain'] = r
+            sim.input['drain'] = d
+            sim.input['slope'] = s
+            try:
+                sim.compute()
+                if np.isnan(sim.output.get('risk', np.nan)):
+                    print(f"⚠️ NaN output at R={r}, D={d}, S={s}")
+            except Exception:
+                print(f"⚠️ No rules fired or undefined output at R={r}, D={d}, S={s}")
+
+print("✅ Sanity check complete — system executed for all combinations.")
 
 # ------------------------------------------------------------
 # Helper Function — 3D Surface Plot
