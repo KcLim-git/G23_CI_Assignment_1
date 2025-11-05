@@ -85,11 +85,12 @@ rule10 = ctrl.Rule(rain['medium'] & slope['flat'] & drain['fair'], risk['high'])
 rule11 = ctrl.Rule(rain['high'] & slope['gentle'] & drain['fair'], risk['high'])
 rule12 = ctrl.Rule(rain['medium'] & slope['gentle'] & drain['fair'], risk['moderate'])
 rule13 = ctrl.Rule(rain['medium'] | drain['fair'] | slope['gentle'], risk['moderate'])
+rule14 = ctrl.Rule(rain['low'] | rain['medium'] | rain['high'] | rain['veryhigh'], risk['moderate'])
 
 # Combine all rules into a list
 rules = [
     rule1, rule2, rule3, rule4, rule5, rule6,
-    rule7, rule8, rule9, rule10, rule11, rule12,rule13
+    rule7, rule8, rule9, rule10, rule11, rule12,rule13,rule14
 ]
 
 # ------------------------------------------------------------
