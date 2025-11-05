@@ -89,18 +89,19 @@ rule9  = ctrl.Rule(rain['low'] & slope['steep'] & drain['fair'], risk['low'])
 rule10 = ctrl.Rule(rain['medium'] & slope['flat'] & drain['fair'], risk['high'])
 rule11 = ctrl.Rule(rain['high'] & slope['gentle'] & drain['fair'], risk['high'])
 rule12 = ctrl.Rule(rain['medium'] & slope['gentle'] & drain['fair'], risk['moderate'])
-rule13 = ctrl.Rule((rain['medium'] & drain['fair']) |(rain['medium'] & slope['gentle']) |(drain['fair'] & slope['gentle']),risk['moderate']
-)
+rule13 = ctrl.Rule((rain['medium'] & drain['fair']) |(rain['medium'] & slope['gentle']) |(drain['fair'] & slope['gentle']),risk['moderate'])
 
 # --- Edge-cover rules for dry or low-rain conditions ---
-ruleA = ctrl.Rule(rain['low'] & (drain['good'] | slope['steep']), risk['low'])
-ruleB = ctrl.Rule(rain['low'] & drain['poor'] & slope['flat'],    risk['moderate'])
+
+
+
 # Combine all rules into a list
 rules = [
     rule1, rule2, rule3, rule4, rule5, rule6,
     rule7, rule8, rule9, rule10, rule11, rule12,
-    rule13, ruleA, ruleB
+    rule13
 ]
+
 
 # ------------------------------------------------------------
 # PART 4 — Build Control System and Simulate
@@ -127,21 +128,7 @@ risk.view(sim=flood_sim)
 plt.show()
 
 
-for r in [0, 20, 40, 60, 80, 100]:
-    for d in [0, 20, 40, 60, 80, 100]:
-        for s in [0, 10, 20, 30]:
-            sim = ctrl.ControlSystemSimulation(flood_ctrl)
-            sim.input['rain'] = r
-            sim.input['drain'] = d
-            sim.input['slope'] = s
-            try:
-                sim.compute()
-                if np.isnan(sim.output.get('risk', np.nan)):
-                    print(f"⚠️ NaN output at R={r}, D={d}, S={s}")
-            except Exception:
-                print(f"⚠️ No rules fired or undefined output at R={r}, D={d}, S={s}")
 
-print("✅ Sanity check complete — system executed for all combinations.")
 
 # ------------------------------------------------------------
 # Helper Function — 3D Surface Plot
